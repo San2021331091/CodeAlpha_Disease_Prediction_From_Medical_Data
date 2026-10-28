@@ -95,11 +95,11 @@ Refer to the Swagger UI at **`http://localhost:8000/docs`** for full documentati
 | **Result** | **Analysis** |
 | ![result](screenshots/result.png) | ![analyze](screenshots/analyze.png) |
 
-*Click any image to view the full‑size screenshot.*
+
 
 ---
 
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. ]
