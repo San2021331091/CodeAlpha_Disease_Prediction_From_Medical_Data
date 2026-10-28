@@ -49,6 +49,7 @@ dist/
 
 # Secrets
 *.env
+*.env.example
 
 # Other
 *.bak
