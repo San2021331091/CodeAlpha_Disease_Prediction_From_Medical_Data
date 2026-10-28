@@ -99,11 +99,6 @@ Refer to the Swagger UI at **`http://localhost:8000/docs`** for full documentati
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code‑of‑conduct, the process for submitting pull requests, and coding standards.
-
----
 
 ## License
 
