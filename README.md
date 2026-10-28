@@ -102,4 +102,4 @@ Refer to the Swagger UI at **`http://localhost:8000/docs`** for full documentati
 
 ## License
 
-Distributed under the MIT License. ]
+Distributed under the MIT License. 
