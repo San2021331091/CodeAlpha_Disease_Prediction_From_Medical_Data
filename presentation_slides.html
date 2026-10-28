@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>CellScope — Disease Prediction from Medical Data | CodeAlpha ML Internship Presentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+    * {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      box-sizing: border-box;
+    }
+
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    :root {
+      --bg-dark: #070d14;
+      --card-bg: rgba(13, 24, 37, 0.75);
+      --border-emerald: rgba(16, 185, 129, 0.3);
+      --border-teal: rgba(20, 184, 166, 0.25);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #060b11;
+      color: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Responsive Slide Container */
+    .slide {
+      display: none;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      padding: 1.5rem 1.25rem 6.5rem 1.25rem;
+      box-sizing: border-box;
+      opacity: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (min-width: 640px) {
+      .slide {
+        padding: 2rem 2.25rem 6.5rem 2.25rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .slide {
+        padding: 2.5rem 3.5rem 6.5rem 3.5rem;
+      }
+    }
+
+    @media (min-width: 1280px) and (min-height: 800px) {
+      .slide {
+        padding: 3rem 4.5rem 6rem 4.5rem;
+        height: 100vh;
+      }
+    }
+
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+    }
+
+    .glass-card {
+      background: rgba(12, 22, 34, 0.76);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(51, 65, 85, 0.45);
+      border-radius: 1rem;
+    }
+
+    .glass-card-emerald {
+      background: rgba(10, 29, 30, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 1rem;
+    }
+
+    .glow-emerald {
+      box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.22);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.22);
+    }
+
+    .glow-rose {
+      box-shadow: 0 0 35px -5px rgba(244, 63, 94, 0.22);
+    }
+
+    /* Custom Responsive Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.6);
+    }
+
+    @media print {
+      body {
+        overflow: visible !important;
+        background: #060b11 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .slide {
+        display: flex !important;
+        opacity: 1 !important;
+        page-break-after: always;
+        min-height: 100vh !important;
+        height: auto !important;
+        padding: 2rem !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="selection:bg-emerald-500/30 selection:text-emerald-200">
+
+  <!-- Top Progress Bar -->
+  <div class="fixed top-0 left-0 w-full h-1.5 bg-slate-900 z-50 no-print">
+    <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 transition-all duration-300" style="width: 8.33%;"></div>
+  </div>
+
+  <!-- Floating Controls (Bottom Bar - Fully Responsive) -->
+  <div class="fixed bottom-3 right-3 sm:bottom-5 sm:right-6 flex items-center gap-2 sm:gap-3 z-50 no-print max-w-[calc(100vw-1.5rem)]">
+    <!-- Slide Quick Selector -->
+    <div class="glass-card px-2.5 sm:px-3 py-1.5 text-xs text-slate-300 font-mono flex items-center gap-1.5 sm:gap-2 border border-slate-700/80 shadow-xl">
+      <select id="slideSelect" onchange="showSlide(parseInt(this.value))" class="bg-transparent text-emerald-400 font-bold focus:outline-none cursor-pointer text-[11px] sm:text-xs max-w-[130px] sm:max-w-[210px] md:max-w-none truncate">
+        <option value="1" class="bg-slate-900 text-white">01. Title & Overview</option>
+        <option value="2" class="bg-slate-900 text-white">02. Problem & Objectives</option>
+        <option value="3" class="bg-slate-900 text-white">03. Benchmark Datasets</option>
+        <option value="4" class="bg-slate-900 text-white">04. Zero-Leakage Pipeline</option>
+        <option value="5" class="bg-slate-900 text-white">05. The 4 ML Classifiers</option>
+        <option value="6" class="bg-slate-900 text-white">06. 5-Fold Stratified CV</option>
+        <option value="7" class="bg-slate-900 text-white">07. Benchmark Results Matrix</option>
+        <option value="8" class="bg-slate-900 text-white">08. Confusion Matrices</option>
+        <option value="9" class="bg-slate-900 text-white">09. Feature Importance & Safety</option>
+        <option value="10" class="bg-slate-900 text-white">10. 3-Tier Architecture</option>
+        <option value="11" class="bg-slate-900 text-white">11. Interactive App Showcase</option>
+        <option value="12" class="bg-slate-900 text-white">12. Verification & Conclusion</option>
+      </select>
+      <span class="text-slate-500 hidden sm:inline">|</span>
+      <span class="text-[11px] sm:text-xs text-slate-400 font-bold whitespace-nowrap"><span id="slideCounter" class="text-white">1</span>/<span id="totalSlides">12</span></span>
+    </div>
+    
+    <button onclick="prevSlide()" title="Previous (Left Arrow / Swipe Right)" class="glass-card p-2 sm:p-2.5 text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-950/40 transition-all border border-slate-700/80 shadow-xl">
+      <i class="fa-solid fa-chevron-left text-xs sm:text-sm"></i>
+    </button>
+    
+    <button onclick="nextSlide()" title="Next (Right Arrow / Space / Swipe Left)" class="glass-card p-2 sm:p-2.5 text-slate-300 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-950/40 transition-all border border-slate-700/80 shadow-xl">
+      <i class="fa-solid fa-chevron-right text-xs sm:text-sm"></i>
+    </button>
+
+    <button onclick="window.print()" title="Print / PDF" class="glass-card p-2 sm:p-2.5 text-slate-300 hover:text-white hover:border-teal-500/50 hover:bg-teal-950/40 transition-all border border-slate-700/80 shadow-xl hidden xs:flex">
+      <i class="fa-solid fa-print text-xs sm:text-sm"></i>
+    </button>
+
+    <button onclick="toggleFullScreen()" title="Fullscreen (F)" class="glass-card p-2 sm:p-2.5 text-slate-300 hover:text-white hover:border-cyan-500/50 hover:bg-cyan-950/40 transition-all border border-slate-700/80 shadow-xl hidden sm:flex">
+      <i class="fa-solid fa-expand text-xs sm:text-sm"></i>
+    </button>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 1: TITLE SLIDE & EXECUTIVE SUMMARY -->
+  <!-- ============================================================== -->
+  <section class="slide active justify-between relative overflow-hidden" id="slide-1">
+    <div class="absolute -right-32 -top-32 w-80 sm:w-96 h-80 sm:h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -left-32 -bottom-32 w-80 sm:w-96 h-80 sm:h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Header bar -->
+    <div class="flex flex-wrap items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4 gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-400 p-[2px] shrink-0">
+          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-dna text-emerald-400 text-sm sm:text-lg"></i>
+          </div>
+        </div>
+        <div>
+          <span class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent">CellScope</span>
+          <span class="text-[10px] sm:text-xs text-slate-400 block font-mono">Clinical Diagnostic ML Platform</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <span class="text-[10px] sm:text-xs px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-semibold whitespace-nowrap">
+          <i class="fa-solid fa-brain mr-1"></i> CodeAlpha ML Internship
+        </span>
+        <span class="text-[10px] sm:text-xs px-2 sm:px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono hidden md:inline">
+          Task 4: Disease Prediction
+        </span>
+      </div>
+    </div>
+
+    <!-- Main Title Content -->
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] sm:text-xs text-emerald-300 font-semibold tracking-wide uppercase">
+          <i class="fa-solid fa-microscope text-emerald-400"></i> Machine Learning In Healthcare
+        </div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] sm:text-xs text-slate-300 font-semibold">
+          <i class="fa-solid fa-user-graduate text-cyan-400"></i> Presented by Santosh Saha
+        </div>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        Multi-Disease Prediction from Medical Data via Calibrated Ensembles & Deep Learning Pipelines
+      </h1>
+
+      <p class="text-xs sm:text-sm md:text-base text-slate-400 font-normal leading-relaxed max-w-4xl">
+        Predicting pathological disease risk across three public UCI clinical benchmarks (Wisconsin Breast Cancer, Cleveland Heart Disease, and Sylhet Diabetes) using 12 independently evaluated machine learning models (SVM, Logistic Regression, Random Forest, and XGBoost) with strict zero-leakage cross-validation and production-grade mobile deployment.
+      </p>
+
+      <!-- Key Performance Badges (Responsive 1/2/4 cols) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-1 sm:pt-2">
+        <div class="glass-card p-3 sm:p-4 border-slate-800 hover:border-emerald-500/40 transition-all">
+          <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider block font-medium">Wisconsin Breast Cancer</span>
+          <span class="text-lg sm:text-xl font-bold text-emerald-400 mt-0.5 sm:mt-1 block font-mono">97.37% <span class="text-xs text-slate-400 font-sans font-normal">Acc (SVM)</span></span>
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">ROC-AUC: 99.40% | F1: 96.39%</span>
+        </div>
+        <div class="glass-card p-3 sm:p-4 border-slate-800 hover:border-teal-500/40 transition-all">
+          <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider block font-medium">Cleveland Heart Disease</span>
+          <span class="text-lg sm:text-xl font-bold text-teal-400 mt-0.5 sm:mt-1 block font-mono">88.52% <span class="text-xs text-slate-400 font-sans font-normal">Acc (LogReg)</span></span>
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">Recall: 92.86% | ROC-AUC: 96.65%</span>
+        </div>
+        <div class="glass-card p-3 sm:p-4 border-slate-800 hover:border-cyan-500/40 transition-all">
+          <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider block font-medium">Early Stage Diabetes</span>
+          <span class="text-lg sm:text-xl font-bold text-cyan-400 mt-0.5 sm:mt-1 block font-mono">90.20% <span class="text-xs text-slate-400 font-sans font-normal">Acc (SVM)</span></span>
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">Precision: 100% | F1: 92.31%</span>
+        </div>
+        <div class="glass-card p-3 sm:p-4 border-slate-800 hover:border-indigo-500/40 transition-all">
+          <span class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider block font-medium">Full Stack Architecture</span>
+          <span class="text-xs sm:text-sm font-bold text-indigo-300 mt-0.5 sm:mt-1 block">Flutter + Go Gin + FastAPI</span>
+          <span class="text-[10px] sm:text-[11px] text-slate-500 font-mono">12 Models &bull; &lt;20ms ML Latency</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Bar -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3 gap-1.5">
+      <span class="flex items-center gap-1.5">
+        <i class="fa-solid fa-code-commit text-emerald-400"></i>
+        <span>Intern: <strong class="text-white font-semibold">Santosh Saha</strong> &bull; CodeAlpha ML Internship</span>
+      </span>
+      <span class="hidden sm:inline">Use Arrow Keys (◀ / ▶) or Dropdown to Navigate</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 2: CLINICAL ML PROBLEM STATEMENT -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-2">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">01 // Problem & Objectives</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Machine Learning in Medical Prognosis</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">The High-Stakes Imperative of Clinical ML</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">
+          Diagnostic delays in oncology, cardiology, and metabolic disorders cause irreversible patient harm. Machine learning offers rapid risk stratification, but healthcare environments demand extreme technical rigor.
+        </p>
+      </div>
+
+      <!-- Core Challenges Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 sm:space-y-3">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+            <i class="fa-solid fa-heart-crack text-sm sm:text-base"></i>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">Asymmetric Cost of False Negatives</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            In medical diagnosis, a Type II error (predicting healthy when a patient has malignant carcinoma or coronary artery disease) is catastrophic. Algorithms must be optimized for <strong class="text-rose-300">high Recall</strong> and calibrated probabilities, not merely overall accuracy.
+          </p>
+        </div>
+
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 sm:space-y-3">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-vial-circle-check text-sm sm:text-base"></i>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">Heterogeneous Feature Modalities</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Clinical datasets vary dramatically: microscopic fine-needle aspirate cell geometry (30 continuous variables), hemodynamic exercise stress measurements (13 mixed continuous/categorical), and symptom survey responses (16 discrete flags).
+          </p>
+        </div>
+
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 sm:space-y-3">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-shield-virus text-sm sm:text-base"></i>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">Data Leakage & Extrapolation Hazards</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Preprocessing before splitting causes optimistic performance bias. Moreover, models deployed without out-of-distribution detection blindly predict on physiological measurements outside valid biological ranges, endangering clinical trust.
+          </p>
+        </div>
+      </div>
+
+      <!-- Engineering Objective Statement -->
+      <div class="glass-card-emerald p-3.5 sm:p-4 border-emerald-500/30 flex items-start sm:items-center gap-3 sm:gap-4">
+        <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 sm:mt-0">
+          <i class="fa-solid fa-bullseye text-lg sm:text-xl"></i>
+        </div>
+        <div class="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+          <strong class="text-white text-xs sm:text-sm">Project Engineering Objective:</strong> Implement a complete machine learning system covering <strong class="text-emerald-300">3 distinct UCI datasets</strong>, benchmark <strong class="text-emerald-300">4 distinct algorithms per disease (12 models)</strong>, enforce leak-free stratified cross-validation, calibrate probability distributions, surface out-of-training-range alerts, and deploy via an Android mobile client with sub-20ms inference.
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 2 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 3: BENCHMARK MEDICAL DATASETS -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-3">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">02 // Data Engineering</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">UCI Repository Benchmarks</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Three Distinct Clinical Problem Domains</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Rigorous benchmarking across three authoritative, peer-reviewed medical datasets with SHA-256 fingerprint validation and duplicate/conflict resolution.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
+        <!-- Dataset 1: Breast Cancer -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
+          <div class="space-y-2.5 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Oncology</span>
+              <span class="text-[11px] font-mono text-slate-400">UCI ID: 17</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Wisconsin Diagnostic Breast Cancer</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Digitized fine-needle aspirate (FNA) cell-nucleus microscopy measuring geometric morphological properties.
+            </p>
+            <div class="space-y-1 pt-2 border-t border-slate-800/80 text-[11px] font-mono">
+              <div class="flex justify-between text-slate-300"><span>Samples:</span> <span class="text-emerald-400 font-bold">569 (455 tr / 114 te)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Features:</span> <span class="text-white font-bold">30 continuous attributes</span></div>
+              <div class="flex justify-between text-slate-300"><span>Target:</span> <span class="text-rose-400 font-semibold">Malignant (212) / Benign (357)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Core Metrics:</span> <span class="text-slate-400">Radius, Texture, Concavity</span></div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            DOI: 10.24432/C5DW2B &bull; CC BY 4.0
+          </div>
+        </div>
+
+        <!-- Dataset 2: Heart Disease -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 hover:border-teal-500/40 transition-all flex flex-col justify-between">
+          <div class="space-y-2.5 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/30">Cardiology</span>
+              <span class="text-[11px] font-mono text-slate-400">UCI ID: 45</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Cleveland Heart Disease</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Hemodynamic, electrocardiographic, and clinical measurements for coronary artery disease risk assessment.
+            </p>
+            <div class="space-y-1 pt-2 border-t border-slate-800/80 text-[11px] font-mono">
+              <div class="flex justify-between text-slate-300"><span>Samples:</span> <span class="text-teal-400 font-bold">303 (242 tr / 61 te)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Features:</span> <span class="text-white font-bold">13 clinical & stress attributes</span></div>
+              <div class="flex justify-between text-slate-300"><span>Target:</span> <span class="text-rose-400 font-semibold">Disease (139) / Normal (164)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Core Metrics:</span> <span class="text-slate-400">Chest Pain, ST Dep, Thallium</span></div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Cleveland Clinic &bull; Imputed ca/thal
+          </div>
+        </div>
+
+        <!-- Dataset 3: Diabetes -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 hover:border-cyan-500/40 transition-all flex flex-col justify-between">
+          <div class="space-y-2.5 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Endocrinology</span>
+              <span class="text-[11px] font-mono text-slate-400">UCI ID: 529</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Early Stage Diabetes Risk</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Diagnostic symptom survey dataset collected from Sylhet Diabetes Hospital patients in Bangladesh.
+            </p>
+            <div class="space-y-1 pt-2 border-t border-slate-800/80 text-[11px] font-mono">
+              <div class="flex justify-between text-slate-300"><span>Samples:</span> <span class="text-cyan-400 font-bold">251 deduplicated (200 tr / 51 te)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Features:</span> <span class="text-white font-bold">16 demographic & symptoms</span></div>
+              <div class="flex justify-between text-slate-300"><span>Target:</span> <span class="text-rose-400 font-semibold">Positive (173) / Negative (78)</span></div>
+              <div class="flex justify-between text-slate-300"><span>Core Metrics:</span> <span class="text-slate-400">Polyuria, Polydipsia, Weakness</span></div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Deduplicated & isolated conflicting rows
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Cleaning Note -->
+      <div class="glass-card p-3 sm:p-3.5 border-slate-800 text-[11px] sm:text-xs text-slate-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5">
+        <span class="flex items-center gap-2">
+          <i class="fa-solid fa-filter text-emerald-400 shrink-0"></i>
+          <span><strong>Data Hygiene Protocol:</strong> Duplicate rows and conflicting diagnostic records removed prior to train/test partitioning to prevent contamination.</span>
+        </span>
+        <span class="font-mono text-emerald-400 font-bold shrink-0">Seed: 42</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 3 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 4: ZERO-LEAKAGE ML PREPROCESSING PIPELINE -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-4">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">03 // Methodology & Rigor</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Zero-Leakage Pipelines</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Preventing Clinical Data Leakage</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          A common pitfall in applied ML is scaling or imputing data prior to cross-validation folds. CellScope enforces strict in-fold pipeline encapsulation.
+        </p>
+      </div>
+
+      <!-- Pipeline Architecture Diagram (Responsive 1/2/4 cols) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <!-- Step 1: Stratified Split -->
+        <div class="glass-card p-3.5 sm:p-4 border-slate-800 space-y-1.5">
+          <div class="text-[11px] font-mono font-bold text-emerald-400">STEP 01</div>
+          <h4 class="text-xs sm:text-sm font-bold text-white">Stratified 80/20 Partition</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Preserves positive class balance (e.g. 37.2% malignant WDBC) across train and test sets. Held-out test set is locked away until final evaluation.
+          </p>
+          <div class="text-[10px] font-mono text-slate-500 pt-0.5">Seed: 42 &bull; No Peeking</div>
+        </div>
+
+        <!-- Step 2: ColumnTransformer -->
+        <div class="glass-card p-3.5 sm:p-4 border-slate-800 space-y-1.5">
+          <div class="text-[11px] font-mono font-bold text-teal-400">STEP 02</div>
+          <h4 class="text-xs sm:text-sm font-bold text-white">In-Fold ColumnTransformer</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Dispatches numeric features to <strong class="text-white">Median Imputation + StandardScaler</strong>; dispatches categoricals to <strong class="text-white">Most-Frequent Imputation + OneHotEncoder</strong>.
+          </p>
+          <div class="text-[10px] font-mono text-slate-500 pt-0.5">Fitted strictly on train fold</div>
+        </div>
+
+        <!-- Step 3: Probability Calibration -->
+        <div class="glass-card p-3.5 sm:p-4 border-slate-800 space-y-1.5">
+          <div class="text-[11px] font-mono font-bold text-cyan-400">STEP 03</div>
+          <h4 class="text-xs sm:text-sm font-bold text-white">Inner Calibration (SVM)</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Standard SVM decision functions do not output true probabilities. Uses 3-fold nested <code class="text-cyan-300 text-[10px]">CalibratedClassifierCV</code> (Platt scaling) with preprocessing inside calibration folds.
+          </p>
+          <div class="text-[10px] font-mono text-slate-500 pt-0.5">Calibrated Sigmoid Mapping</div>
+        </div>
+
+        <!-- Step 4: Schema Extrapolation Bounds -->
+        <div class="glass-card p-3.5 sm:p-4 border-slate-800 space-y-1.5">
+          <div class="text-[11px] font-mono font-bold text-indigo-400">STEP 04</div>
+          <h4 class="text-xs sm:text-sm font-bold text-white">Training Bounds Export</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Computes min, max, and median for every feature on the training split only, serialized to metadata schema for real-time frontend out-of-distribution warnings.
+          </p>
+          <div class="text-[10px] font-mono text-slate-500 pt-0.5">Runtime Safety Checks</div>
+        </div>
+      </div>
+
+      <!-- Code Snippet Box -->
+      <div class="glass-card p-3 sm:p-4 border-slate-800 bg-slate-950/80 font-mono text-[11px] sm:text-xs">
+        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-slate-400 text-[10px] sm:text-[11px]">
+          <span><i class="fa-brands fa-python text-emerald-400 mr-1.5"></i>ml-service/app/training.py &bull; In-Fold Preprocessing</span>
+          <span class="text-emerald-400 hidden xs:inline">scikit-learn 1.9.1</span>
+        </div>
+        <pre class="text-slate-300 leading-relaxed overflow-x-auto"><code>def preprocessing(dataset):
+    numeric = [i for i, f in enumerate(dataset.features) if f["kind"] == "number"]
+    categorical = [i for i, f in enumerate(dataset.features) if f["kind"] == "categorical"]
+    return ColumnTransformer([
+        ("numeric", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), numeric),
+        ("categorical", make_pipeline(SimpleImputer(strategy="most_frequent"), 
+                                      OneHotEncoder(handle_unknown="ignore", sparse_output=False)), categorical),
+    ])</code></pre>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 4 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 5: THE 4 ML CLASSIFIERS -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-5">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">04 // Model Architectures</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">12 Fitted Classifiers (4 &times; 3)</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">The Four Machine Learning Classifiers</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Evaluating linear, geometric, bagging ensemble, and gradient boosted architectures to determine the optimal bias-variance tradeoff for each clinical domain.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <!-- Model 1: Support Vector Machine -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 hover:border-emerald-500/40 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Geometric / Maximum Margin</span>
+            <span class="text-[10px] sm:text-xs font-mono text-emerald-400 font-bold">Selected: Breast & Diabetes</span>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-shapes text-emerald-400"></i> Support Vector Machine (SVM / SVC)
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Constructs optimal separating hyperplanes in high-dimensional kernel space via Radial Basis Function (RBF) kernel:
+            <span class="font-mono text-slate-300 block py-0.5 text-[11px]">K(x, x') = exp(-&gamma; ||x - x'||&sup2;)</span>
+            Highly resistant to overfitting in small-sample, high-feature spaces like Wisconsin Breast Cancer (30 features). Wrapped in 3-fold Platt calibration for monotonic probabilities.
+          </p>
+        </div>
+
+        <!-- Model 2: Logistic Regression -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 hover:border-teal-500/40 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-500/30">Generalized Linear Model</span>
+            <span class="text-[10px] sm:text-xs font-mono text-teal-400 font-bold">Selected: Heart Disease</span>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-teal-400"></i> Logistic Regression (L2 Regularized)
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Models log-odds of disease presence via sigmoid transformation:
+            <span class="font-mono text-slate-300 block py-0.5 text-[11px]">&sigma;(z) = 1 / (1 + e<sup>-z</sup>), &nbsp; z = &beta;&sup0; + &sum; &beta;<sub>i</sub>x<sub>i</sub></span>
+            Trained with L-BFGS solver, max_iter=3000, and standard L2 regularization. Provides superior calibration and achieved the highest CV F1 (82.45%) on Cleveland Heart Disease.
+          </p>
+        </div>
+
+        <!-- Model 3: Random Forest -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 hover:border-cyan-500/40 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Ensemble Bagging</span>
+            <span class="text-[10px] sm:text-xs font-mono text-slate-400">250 Trees &bull; Balanced</span>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-tree text-cyan-400"></i> Random Forest Classifier
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Constructs 250 de-correlated decision trees with bootstrap aggregation (bagging) and random feature subspace selection. Configured with <code class="text-cyan-300 text-[10px]">min_samples_leaf=2</code> and <code class="text-cyan-300 text-[10px]">class_weight="balanced"</code> to penalize minority-class misclassification.
+          </p>
+        </div>
+
+        <!-- Model 4: XGBoost -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 hover:border-indigo-500/40 transition-all">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Gradient Boosting Trees</span>
+            <span class="text-[10px] sm:text-xs font-mono text-slate-400">Hist Method &bull; &eta;=0.05</span>
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-bolt-lightning text-indigo-400"></i> XGBoost (Extreme Gradient Boosting)
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Minimizes regularized objective using second-order Taylor expansion gradients. Fitted with 200 trees, shallow depth (<code class="text-indigo-300 text-[10px]">max_depth=3</code>), conservative learning rate (<code class="text-indigo-300 text-[10px]">&eta;=0.05</code>), and histogram binning to prevent overfitting on small clinical samples.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 5 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 6: 5-FOLD STRATIFIED CV STRATEGY -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-6">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">05 // Model Selection</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">5-Fold Stratified Cross-Validation</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">How the "Auto" Model is Scientifically Chosen</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          CellScope never selects models based on the test set. Selection uses 5-fold stratified cross-validation evaluated exclusively on training data, prioritizing positive-class F1 score with ROC-AUC as tie-breaker.
+        </p>
+      </div>
+
+      <!-- CV Process Flow -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-mono font-bold text-xs sm:text-sm">
+            01
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">Stratified Fold Partitioning</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            The 80% training partition is split into 5 equal folds while strictly maintaining the ground-truth disease class ratios across every fold.
+          </p>
+          <div class="text-[10px] font-mono text-emerald-400">Preserves class prevalence</div>
+        </div>
+
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-mono font-bold text-xs sm:text-sm">
+            02
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">In-Fold Preprocessing</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            For each of the 5 iterations, imputation medians and standard scalers are computed from the 4 training folds only, then applied to the 5th validation fold.
+          </p>
+          <div class="text-[10px] font-mono text-teal-400">Zero validation data leakage</div>
+        </div>
+
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-mono font-bold text-xs sm:text-sm">
+            03
+          </div>
+          <h3 class="text-sm sm:text-base font-bold text-white">Metric Priority Selection</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Models are ranked by:
+            <span class="block font-mono text-cyan-300 py-0.5 font-bold">1. Mean CV F1 Score</span>
+            <span class="block font-mono text-slate-400 font-bold">2. Mean CV ROC-AUC (tie-breaker)</span>
+            The winner is permanently marked as <code class="text-cyan-300">selected_model</code> in schema.
+          </p>
+        </div>
+      </div>
+
+      <!-- CV Results Summary Table (Responsive with overflow-x-auto) -->
+      <div class="glass-card p-3 sm:p-4 border-slate-800">
+        <div class="text-[11px] sm:text-xs font-mono font-bold text-slate-300 mb-2 sm:mb-3 flex flex-wrap items-center justify-between gap-1">
+          <span><i class="fa-solid fa-ranking-star text-emerald-400 mr-1.5"></i>5-Fold Cross-Validation Training Performance Comparison</span>
+          <span class="text-slate-500 text-[10px]">Training Split Only</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left min-w-[550px]">
+            <thead class="text-[10px] sm:text-[11px] text-slate-400 uppercase bg-slate-900/60 font-mono">
+              <tr>
+                <th class="py-2 px-3">Disease Dataset</th>
+                <th class="py-2 px-3">Selected Model</th>
+                <th class="py-2 px-3">CV Mean F1</th>
+                <th class="py-2 px-3">CV F1 Std Dev</th>
+                <th class="py-2 px-3">CV Mean ROC-AUC</th>
+                <th class="py-2 px-3">Runner Up</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 font-mono text-[11px]">
+              <tr class="bg-emerald-950/20">
+                <td class="py-2 px-3 text-white font-sans font-bold">Breast Cancer</td>
+                <td class="py-2 px-3 text-emerald-400 font-bold"><i class="fa-solid fa-trophy mr-1 text-amber-400 text-[10px]"></i> SVM (Calibrated)</td>
+                <td class="py-2 px-3 text-emerald-300 font-bold">96.41%</td>
+                <td class="py-2 px-3 text-slate-400">&plusmn; 1.63%</td>
+                <td class="py-2 px-3 text-emerald-400 font-bold">99.45%</td>
+                <td class="py-2 px-3 text-slate-400 font-sans">Logistic Regression (96.40%)</td>
+              </tr>
+              <tr class="bg-teal-950/20">
+                <td class="py-2 px-3 text-white font-sans font-bold">Heart Disease</td>
+                <td class="py-2 px-3 text-teal-400 font-bold"><i class="fa-solid fa-trophy mr-1 text-amber-400 text-[10px]"></i> Logistic Regression</td>
+                <td class="py-2 px-3 text-teal-300 font-bold">82.45%</td>
+                <td class="py-2 px-3 text-slate-400">&plusmn; 4.12%</td>
+                <td class="py-2 px-3 text-teal-400 font-bold">90.49%</td>
+                <td class="py-2 px-3 text-slate-400 font-sans">SVM (79.18%)</td>
+              </tr>
+              <tr class="bg-cyan-950/20">
+                <td class="py-2 px-3 text-white font-sans font-bold">Diabetes Risk</td>
+                <td class="py-2 px-3 text-cyan-400 font-bold"><i class="fa-solid fa-trophy mr-1 text-amber-400 text-[10px]"></i> SVM (Calibrated)</td>
+                <td class="py-2 px-3 text-cyan-300 font-bold">95.34%</td>
+                <td class="py-2 px-3 text-slate-400">&plusmn; 2.45%</td>
+                <td class="py-2 px-3 text-cyan-400 font-bold">98.54%</td>
+                <td class="py-2 px-3 text-slate-400 font-sans">XGBoost (94.51%)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 6 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 7: BENCHMARK RESULTS MATRIX -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-7">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">06 // Empirical Evaluation</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Held-Out Test Split (20%)</span>
+    </div>
+
+    <div class="my-auto py-3 sm:py-5 space-y-3 sm:space-y-4 max-w-5xl">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white">Comprehensive 12-Classifier Evaluation Matrix</h2>
+          <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">Measured test metrics generated from <code class="text-emerald-400">all_metrics.json</code> on unpeeking test data.</p>
+        </div>
+        <div>
+          <span class="text-[10px] sm:text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
+            Positive Class: Disease / Malignant (1)
+          </span>
+        </div>
+      </div>
+
+      <!-- Complete Responsive Table with Horizontal Scroll -->
+      <div class="glass-card border-slate-800 shadow-2xl">
+        <div class="overflow-x-auto max-h-[360px] sm:max-h-[380px]">
+          <table class="w-full text-xs text-left min-w-[700px]">
+            <thead class="text-[10px] sm:text-[11px] text-slate-300 uppercase bg-slate-900/90 font-mono sticky top-0 z-10 border-b border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Disease Dataset</th>
+                <th class="py-2.5 px-3">Classifier Architecture</th>
+                <th class="py-2.5 px-3 text-right">CV F1</th>
+                <th class="py-2.5 px-3 text-right">Test Acc</th>
+                <th class="py-2.5 px-3 text-right">Precision</th>
+                <th class="py-2.5 px-3 text-right">Recall</th>
+                <th class="py-2.5 px-3 text-right">F1-Score</th>
+                <th class="py-2.5 px-3 text-right">ROC-AUC</th>
+                <th class="py-2.5 px-3 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/50 font-mono text-[11px]">
+              <!-- Breast Cancer Group -->
+              <tr class="bg-emerald-950/30">
+                <td class="py-2 px-3 font-sans font-bold text-white" rowspan="4">Wisconsin Breast Cancer<br><span class="text-[10px] text-slate-400 font-mono font-normal">114 test samples</span></td>
+                <td class="py-2 px-3 font-sans font-semibold text-emerald-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Support Vector Machine
+                </td>
+                <td class="py-2 px-3 text-right text-slate-300">96.41%</td>
+                <td class="py-2 px-3 text-right text-emerald-400 font-bold">97.37%</td>
+                <td class="py-2 px-3 text-right text-slate-300">97.56%</td>
+                <td class="py-2 px-3 text-right text-emerald-400 font-bold">95.24%</td>
+                <td class="py-2 px-3 text-right text-emerald-300 font-bold">96.39%</td>
+                <td class="py-2 px-3 text-right text-emerald-400 font-bold">99.40%</td>
+                <td class="py-2 px-3 text-center"><span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-bold">Selected</span></td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Logistic Regression</td>
+                <td class="py-2 px-3 text-right text-slate-400">96.40%</td>
+                <td class="py-2 px-3 text-right text-slate-300">96.49%</td>
+                <td class="py-2 px-3 text-right text-slate-300">97.50%</td>
+                <td class="py-2 px-3 text-right text-slate-300">92.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">95.12%</td>
+                <td class="py-2 px-3 text-right text-emerald-400">99.60%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Random Forest</td>
+                <td class="py-2 px-3 text-right text-slate-400">95.04%</td>
+                <td class="py-2 px-3 text-right text-slate-300">97.37%</td>
+                <td class="py-2 px-3 text-right text-emerald-400">100.00%</td>
+                <td class="py-2 px-3 text-right text-slate-300">92.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">96.30%</td>
+                <td class="py-2 px-3 text-right text-emerald-400">99.67%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">XGBoost (Hist Gradient)</td>
+                <td class="py-2 px-3 text-right text-slate-400">96.14%</td>
+                <td class="py-2 px-3 text-right text-slate-300">96.49%</td>
+                <td class="py-2 px-3 text-right text-emerald-400">100.00%</td>
+                <td class="py-2 px-3 text-right text-slate-300">90.48%</td>
+                <td class="py-2 px-3 text-right text-slate-300">95.00%</td>
+                <td class="py-2 px-3 text-right text-emerald-400">99.44%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+
+              <!-- Heart Disease Group -->
+              <tr class="bg-teal-950/30 border-t border-slate-700">
+                <td class="py-2 px-3 font-sans font-bold text-white" rowspan="4">Cleveland Heart Disease<br><span class="text-[10px] text-slate-400 font-mono font-normal">61 test samples</span></td>
+                <td class="py-2 px-3 font-sans font-semibold text-teal-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Logistic Regression
+                </td>
+                <td class="py-2 px-3 text-right text-slate-300">82.45%</td>
+                <td class="py-2 px-3 text-right text-teal-400 font-bold">88.52%</td>
+                <td class="py-2 px-3 text-right text-slate-300">83.87%</td>
+                <td class="py-2 px-3 text-right text-teal-400 font-bold">92.86%</td>
+                <td class="py-2 px-3 text-right text-teal-300 font-bold">88.14%</td>
+                <td class="py-2 px-3 text-right text-teal-400 font-bold">96.65%</td>
+                <td class="py-2 px-3 text-center"><span class="px-1.5 py-0.5 rounded text-[10px] bg-teal-500/20 text-teal-300 font-bold">Selected</span></td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Support Vector Machine</td>
+                <td class="py-2 px-3 text-right text-slate-400">79.18%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.52%</td>
+                <td class="py-2 px-3 text-right text-slate-300">83.87%</td>
+                <td class="py-2 px-3 text-right text-slate-300">92.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.14%</td>
+                <td class="py-2 px-3 text-right text-teal-400">96.32%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Random Forest</td>
+                <td class="py-2 px-3 text-right text-slate-400">78.64%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.52%</td>
+                <td class="py-2 px-3 text-right text-slate-300">81.82%</td>
+                <td class="py-2 px-3 text-right text-teal-400">96.43%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.52%</td>
+                <td class="py-2 px-3 text-right text-teal-400">95.45%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">XGBoost (Hist Gradient)</td>
+                <td class="py-2 px-3 text-right text-slate-400">76.35%</td>
+                <td class="py-2 px-3 text-right text-slate-300">86.89%</td>
+                <td class="py-2 px-3 text-right text-slate-300">81.25%</td>
+                <td class="py-2 px-3 text-right text-slate-300">92.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">86.67%</td>
+                <td class="py-2 px-3 text-right text-teal-400">94.70%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+
+              <!-- Diabetes Group -->
+              <tr class="bg-cyan-950/30 border-t border-slate-700">
+                <td class="py-2 px-3 font-sans font-bold text-white" rowspan="4">Early Stage Diabetes Risk<br><span class="text-[10px] text-slate-400 font-mono font-normal">51 test samples</span></td>
+                <td class="py-2 px-3 font-sans font-semibold text-cyan-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Support Vector Machine
+                </td>
+                <td class="py-2 px-3 text-right text-slate-300">95.34%</td>
+                <td class="py-2 px-3 text-right text-cyan-400 font-bold">90.20%</td>
+                <td class="py-2 px-3 text-right text-cyan-400 font-bold">100.00%</td>
+                <td class="py-2 px-3 text-right text-cyan-400 font-bold">85.71%</td>
+                <td class="py-2 px-3 text-right text-cyan-300 font-bold">92.31%</td>
+                <td class="py-2 px-3 text-right text-cyan-400 font-bold">95.89%</td>
+                <td class="py-2 px-3 text-center"><span class="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-bold">Selected</span></td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Logistic Regression</td>
+                <td class="py-2 px-3 text-right text-slate-400">91.49%</td>
+                <td class="py-2 px-3 text-right text-slate-300">82.35%</td>
+                <td class="py-2 px-3 text-right text-slate-300">93.33%</td>
+                <td class="py-2 px-3 text-right text-slate-300">80.00%</td>
+                <td class="py-2 px-3 text-right text-slate-300">86.15%</td>
+                <td class="py-2 px-3 text-right text-cyan-400">92.14%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">Random Forest</td>
+                <td class="py-2 px-3 text-right text-slate-400">93.66%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.24%</td>
+                <td class="py-2 px-3 text-right text-cyan-400">100.00%</td>
+                <td class="py-2 px-3 text-right text-slate-300">82.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">90.62%</td>
+                <td class="py-2 px-3 text-right text-cyan-400">96.43%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2 px-3 font-sans text-slate-300">XGBoost (Hist Gradient)</td>
+                <td class="py-2 px-3 text-right text-slate-400">94.51%</td>
+                <td class="py-2 px-3 text-right text-slate-300">88.24%</td>
+                <td class="py-2 px-3 text-right text-cyan-400">100.00%</td>
+                <td class="py-2 px-3 text-right text-slate-300">82.86%</td>
+                <td class="py-2 px-3 text-right text-slate-300">90.62%</td>
+                <td class="py-2 px-3 text-right text-cyan-400">95.71%</td>
+                <td class="py-2 px-3 text-center text-slate-500">Benchmark</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-slate-400 gap-1">
+        <span><i class="fa-solid fa-circle-info text-cyan-400 mr-1.5"></i> All metrics evaluated on isolated 20% test splits using Scikit-Learn zero-division guards.</span>
+        <span class="font-mono text-emerald-400">100% Precision achieved by RF and XGBoost on WDBC & Diabetes</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 7 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 8: CONFUSION MATRICES & ERROR TRADEOFFS -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-8">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">07 // Error Analysis</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Confusion Matrices of Selected Models</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Clinical Confusion Matrix Breakdown</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Evaluating True Negatives (TN), False Positives (FP), False Negatives (FN), and True Positives (TP) on held-out test data for the selected winning classifiers.
+        </p>
+      </div>
+
+      <!-- 3 Confusion Matrices in a Row (Responsive 1 or 3 cols) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
+        <!-- Matrix 1: Breast Cancer SVM -->
+        <div class="glass-card p-4 sm:p-5 border-emerald-500/30 space-y-2 sm:space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-emerald-300">Wisconsin Breast Cancer</span>
+            <span class="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">SVM (Selected)</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-center font-mono my-2">
+            <div class="p-2 sm:p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Neg (Benign)</span>
+              <span class="text-xl sm:text-2xl font-bold text-emerald-400">71</span>
+              <span class="text-[9px] sm:text-[10px] text-emerald-300 block">98.6% Specificity</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-rose-950/30 border border-rose-500/30 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Pos (Type I)</span>
+              <span class="text-xl sm:text-2xl font-bold text-amber-400">1</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block">Benign called Malignant</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-rose-950/40 border border-rose-500/50 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Neg (Type II)</span>
+              <span class="text-xl sm:text-2xl font-bold text-rose-400">2</span>
+              <span class="text-[9px] sm:text-[10px] text-rose-300 block">Critical missed cancer</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Pos (Malignant)</span>
+              <span class="text-xl sm:text-2xl font-bold text-emerald-400">40</span>
+              <span class="text-[9px] sm:text-[10px] text-emerald-300 block">95.24% Recall</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-400 leading-snug">
+            Out of 42 malignant cases, 40 were correctly flagged. Only 2 were missed, yielding 96.39% F1 and 99.40% ROC-AUC.
+          </div>
+        </div>
+
+        <!-- Matrix 2: Heart Disease LogReg -->
+        <div class="glass-card p-4 sm:p-5 border-teal-500/30 space-y-2 sm:space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-teal-300">Cleveland Heart Disease</span>
+            <span class="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-400">LogReg (Selected)</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-center font-mono my-2">
+            <div class="p-2 sm:p-3 bg-teal-950/40 border border-teal-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Neg (Healthy)</span>
+              <span class="text-xl sm:text-2xl font-bold text-teal-400">28</span>
+              <span class="text-[9px] sm:text-[10px] text-teal-300 block">84.8% Specificity</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-rose-950/30 border border-rose-500/30 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Pos (Type I)</span>
+              <span class="text-xl sm:text-2xl font-bold text-amber-400">5</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block">False Alarm</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-rose-950/40 border border-rose-500/50 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Neg (Type II)</span>
+              <span class="text-xl sm:text-2xl font-bold text-rose-400">2</span>
+              <span class="text-[9px] sm:text-[10px] text-rose-300 block">Missed Heart Disease</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-teal-950/40 border border-teal-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Pos (Disease)</span>
+              <span class="text-xl sm:text-2xl font-bold text-teal-400">26</span>
+              <span class="text-[9px] sm:text-[10px] text-teal-300 block">92.86% Recall</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-400 leading-snug">
+            26 out of 28 cardiac patients accurately detected (<strong class="text-teal-300">92.86% Recall</strong>). High sensitivity ensures high-risk individuals receive urgent care.
+          </div>
+        </div>
+
+        <!-- Matrix 3: Diabetes SVM -->
+        <div class="glass-card p-4 sm:p-5 border-cyan-500/30 space-y-2 sm:space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-cyan-300">Early Stage Diabetes</span>
+            <span class="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400">SVM (Selected)</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 text-center font-mono my-2">
+            <div class="p-2 sm:p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Neg (Negative)</span>
+              <span class="text-xl sm:text-2xl font-bold text-cyan-400">16</span>
+              <span class="text-[9px] sm:text-[10px] text-cyan-300 block">100.0% Specificity</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Pos (Type I)</span>
+              <span class="text-xl sm:text-2xl font-bold text-emerald-400">0</span>
+              <span class="text-[9px] sm:text-[10px] text-emerald-300 block">Zero False Positives</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-rose-950/40 border border-rose-500/50 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">False Neg (Type II)</span>
+              <span class="text-xl sm:text-2xl font-bold text-rose-400">5</span>
+              <span class="text-[9px] sm:text-[10px] text-rose-300 block">Missed Diabetics</span>
+            </div>
+            <div class="p-2 sm:p-3 bg-cyan-950/40 border border-cyan-500/40 rounded-lg">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 block font-sans">True Pos (Positive)</span>
+              <span class="text-xl sm:text-2xl font-bold text-cyan-400">30</span>
+              <span class="text-[9px] sm:text-[10px] text-cyan-300 block">85.71% Recall</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-400 leading-snug">
+            Achieves a remarkable <strong class="text-cyan-300">100.0% Precision</strong> with zero false positives on held-out test data, while capturing 30 confirmed positive cases.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tradeoff Insight -->
+      <div class="glass-card p-3 sm:p-4 border-slate-800 text-[11px] sm:text-xs text-slate-300 flex items-start sm:items-center gap-3">
+        <i class="fa-solid fa-scale-balanced text-lg sm:text-xl text-emerald-400 shrink-0 mt-0.5 sm:mt-0"></i>
+        <div>
+          <strong class="text-white">Precision-Recall Clinical Tradeoff:</strong> Across all three conditions, models achieve between 85.7% and 95.2% recall on positive pathology while maintaining specificity above 84.8%. This strikes an optimal clinical balance between mitigating missed diagnoses and avoiding unnecessary invasive procedures.
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 8 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 9: FEATURE IMPORTANCE & CLINICAL SAFETY -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-9">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">08 // Interpretability & Safety</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Permutation Importance & Range Alerts</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Explainability & Out-of-Distribution Safety</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Machine learning in medicine cannot operate as an unverified black box. CellScope implements model inspection via Permutation Importance on ROC-AUC and real-time training extrapolation warnings.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
+        <!-- Left: Permutation Feature Importance -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-3 sm:space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-magnifying-glass-chart text-emerald-400"></i> Top Predictive Clinical Biomarkers
+            </h3>
+            <span class="text-[10px] sm:text-[11px] font-mono text-emerald-400">ROC-AUC Drop</span>
+          </div>
+
+          <!-- Feature bars -->
+          <div class="space-y-2.5 sm:space-y-3 text-xs">
+            <div>
+              <div class="flex justify-between text-slate-300 font-mono mb-1 text-[11px]">
+                <span>Breast: Worst Texture & Radius Error</span>
+                <span class="text-emerald-400 font-bold">Top Geometric Determinants</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full" style="width: 88%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 font-mono mb-1 text-[11px]">
+                <span>Heart: Fluro Vessels (ca) & Thallium Stress</span>
+                <span class="text-teal-400 font-bold">Top Hemodynamic Determinants</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-teal-500 to-cyan-400 h-full rounded-full" style="width: 82%;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 font-mono mb-1 text-[11px]">
+                <span>Diabetes: Polyuria & Polydipsia</span>
+                <span class="text-cyan-400 font-bold">Excessive Urination / Thirst</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-gradient-to-r from-cyan-500 to-indigo-400 h-full rounded-full" style="width: 94%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed pt-1">
+            Computed on training data via 5 permutation repeats. Results mirror clinical pathology: excessive thirst/urination dominate early diabetes onset, while fluoroscopy major vessel count dominates cardiovascular occlusion.
+          </p>
+        </div>
+
+        <!-- Right: Training Bounds Warning System -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2.5 sm:space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Extrapolation & Out-of-Range Guardrails
+            </h3>
+            <span class="text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">Safety System</span>
+          </div>
+
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Machine learning models become dangerously unreliable when queried outside the convex hull of their training data. CellScope prevents silent failure:
+          </p>
+
+          <div class="space-y-2 text-xs">
+            <div class="p-2.5 sm:p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 sm:gap-3">
+              <i class="fa-solid fa-code text-cyan-400 mt-0.5 shrink-0"></i>
+              <div>
+                <span class="font-bold text-white">Dynamic Schema Range Metadata:</span>
+                <p class="text-slate-400 text-[11px]">Backend broadcasts training <code class="text-cyan-300">[min, max, median]</code> for every feature via <code class="text-cyan-300">/api/schema</code>.</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 sm:p-3 rounded-lg bg-amber-950/30 border border-amber-500/30 flex items-start gap-2.5 sm:gap-3">
+              <i class="fa-solid fa-bell text-amber-400 mt-0.5 shrink-0"></i>
+              <div>
+                <span class="font-bold text-amber-200">Real-Time Extrapolation Badges:</span>
+                <p class="text-slate-400 text-[11px]">If a user inputs a cholesterol of 600 or glucose outside training bounds, the UI displays an alert: <em>"Input outside training range"</em>.</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 sm:p-3 rounded-lg bg-slate-900/80 border border-slate-800 flex items-start gap-2.5 sm:gap-3">
+              <i class="fa-solid fa-shield-halved text-emerald-400 mt-0.5 shrink-0"></i>
+              <div>
+                <span class="font-bold text-white">Non-Diagnostic Educational Disclaimer:</span>
+                <p class="text-slate-400 text-[11px]">Every prediction response clearly affirms: <em>"Demonstration only. Not a medical device or diagnostic instrument."</em></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 9 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 10: 3-TIER PRODUCTION ARCHITECTURE -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-10">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">09 // Systems Engineering</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">Microservices Topology</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Decoupled Microservice Architecture</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Production-grade separation of concerns across presentation, API gateway orchestration, and high-performance ML inference.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
+        <!-- Tier 1: Frontend Client -->
+        <div class="glass-card p-4 sm:p-5 border-emerald-500/30 flex flex-col justify-between">
+          <div class="space-y-2 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">CLIENT TIER</span>
+              <span class="text-[11px] font-mono text-slate-400">Android APK</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Flutter 3.44 Mobile App</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Implemented in Dart 3.12 with clean MVVM architecture and Riverpod state management.
+            </p>
+            <ul class="text-[11px] space-y-1.5 text-slate-300 font-mono pt-1">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-[10px]"></i> Animated emerald cell splash</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-[10px]"></i> Dynamic schema-driven forms</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-[10px]"></i> 4 benchmark samples per disease</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400 text-[10px]"></i> In-app Model Lab & evaluation report</li>
+            </ul>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Port: 10.0.2.2:8080 (Emulator) / 127.0.0.1 (ADB)
+          </div>
+        </div>
+
+        <!-- Tier 2: API Gateway -->
+        <div class="glass-card p-4 sm:p-5 border-teal-500/30 flex flex-col justify-between">
+          <div class="space-y-2 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold">GATEWAY TIER</span>
+              <span class="text-[11px] font-mono text-teal-400">Go 1.26 + Gin</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">High-Throughput Go Gateway</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Handles HTTP sanitization, payload capping, audit trail persistence, and upstream proxying.
+            </p>
+            <ul class="text-[11px] space-y-1.5 text-slate-300 font-mono pt-1">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400 text-[10px]"></i> 64 KB strict request body cap</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400 text-[10px]"></i> Atomic JSON history storage (200 records)</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400 text-[10px]"></i> Zero PII stored (isolated random UUIDs)</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400 text-[10px]"></i> 15s upstream timeout resilience</li>
+            </ul>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Port: 8080 &bull; Sub-1ms gateway overhead
+          </div>
+        </div>
+
+        <!-- Tier 3: ML Microservice -->
+        <div class="glass-card p-4 sm:p-5 border-cyan-500/30 flex flex-col justify-between">
+          <div class="space-y-2 sm:space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">ML ENGINE TIER</span>
+              <span class="text-[11px] font-mono text-cyan-400">Python 3.13 + FastAPI</span>
+            </div>
+            <h3 class="text-base sm:text-lg font-bold text-white">FastAPI ML Serving Engine</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Houses trained scikit-learn and XGBoost pipelines with asynchronous execution and Pydantic validation.
+            </p>
+            <ul class="text-[11px] space-y-1.5 text-slate-300 font-mono pt-1">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-[10px]"></i> Dynamic schema & benchmark serving</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-[10px]"></i> ModelRepository atomic joblib loader</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-[10px]"></i> Sub-20ms inference latency</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-cyan-400 text-[10px]"></i> Interactive OpenAPI /docs documentation</li>
+            </ul>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Port: 8000 &bull; Dockerized with OpenMP
+          </div>
+        </div>
+      </div>
+
+      <!-- Orchestration Callout -->
+      <div class="glass-card p-3 sm:p-3.5 border-slate-800 text-[11px] sm:text-xs text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5">
+        <span class="flex items-center gap-2 font-mono">
+          <i class="fa-solid fa-terminal text-emerald-400 shrink-0"></i>
+          <span>One-command launch: <strong class="text-emerald-400">.\start_services.ps1 -Setup</strong> (handles venv, dataset verification, training & Gin build)</span>
+        </span>
+        <span class="text-slate-500 font-mono shrink-0">docker-compose.yml included</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 10 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 11: INTERACTIVE ANDROID APP SHOWCASE -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-11">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">10 // User Experience</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">CellScope Android Client</span>
+    </div>
+
+    <div class="my-auto py-3 sm:py-5 space-y-3 sm:space-y-4 max-w-5xl">
+      <div>
+        <h2 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white">Full-Featured Mobile Clinical Interface</h2>
+        <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+          Designed specifically for clinical usability: instant benchmark preloads, real-time input validation, probability bars, and transparent confusion matrices.
+        </p>
+      </div>
+
+      <!-- 5 Screenshots Showcase (Responsive 2/3/5 cols) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        <!-- Screen 1: Overview -->
+        <div class="glass-card p-2 border-slate-800 space-y-1 flex flex-col items-center">
+          <div class="w-full h-36 sm:h-44 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80 relative">
+            <img src="screenshots/overview.png" alt="Overview Screen" class="w-full h-full object-cover object-top hover:scale-105 transition-all duration-300" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-[10px] text-emerald-400 font-mono p-2 text-center\'>Overview UI</div>'">
+          </div>
+          <span class="text-[10px] sm:text-[11px] font-bold text-white block text-center">01. Overview</span>
+          <span class="text-[9px] sm:text-[10px] text-slate-400 text-center leading-tight">Disease selection & models</span>
+        </div>
+
+        <!-- Screen 2: Analyze -->
+        <div class="glass-card p-2 border-slate-800 space-y-1 flex flex-col items-center">
+          <div class="w-full h-36 sm:h-44 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80 relative">
+            <img src="screenshots/analyze.png" alt="Analyze Screen" class="w-full h-full object-cover object-top hover:scale-105 transition-all duration-300" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-[10px] text-teal-400 font-mono p-2 text-center\'>Analyze UI</div>'">
+          </div>
+          <span class="text-[10px] sm:text-[11px] font-bold text-white block text-center">02. Measurement Form</span>
+          <span class="text-[9px] sm:text-[10px] text-slate-400 text-center leading-tight">4 UCI sample loaders</span>
+        </div>
+
+        <!-- Screen 3: Result -->
+        <div class="glass-card p-2 border-emerald-500/30 space-y-1 flex flex-col items-center">
+          <div class="w-full h-36 sm:h-44 rounded-lg overflow-hidden bg-slate-900 border border-emerald-500/40 relative">
+            <img src="screenshots/result.png" alt="Result Screen" class="w-full h-full object-cover object-top hover:scale-105 transition-all duration-300" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-[10px] text-emerald-400 font-mono p-2 text-center\'>Result UI</div>'">
+          </div>
+          <span class="text-[10px] sm:text-[11px] font-bold text-emerald-300 block text-center">03. Inference Result</span>
+          <span class="text-[9px] sm:text-[10px] text-slate-400 text-center leading-tight">Probability & range alerts</span>
+        </div>
+
+        <!-- Screen 4: Model Lab -->
+        <div class="glass-card p-2 border-slate-800 space-y-1 flex flex-col items-center">
+          <div class="w-full h-36 sm:h-44 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80 relative">
+            <img src="screenshots/model-lab.png" alt="Model Lab Screen" class="w-full h-full object-cover object-top hover:scale-105 transition-all duration-300" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-[10px] text-cyan-400 font-mono p-2 text-center\'>Model Lab UI</div>'">
+          </div>
+          <span class="text-[10px] sm:text-[11px] font-bold text-white block text-center">04. Model Lab</span>
+          <span class="text-[9px] sm:text-[10px] text-slate-400 text-center leading-tight">Live confusion matrices</span>
+        </div>
+
+        <!-- Screen 5: History -->
+        <div class="glass-card p-2 border-slate-800 space-y-1 flex flex-col items-center col-span-2 sm:col-span-1">
+          <div class="w-full h-36 sm:h-44 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80 relative">
+            <img src="screenshots/history.png" alt="History Screen" class="w-full h-full object-cover object-top hover:scale-105 transition-all duration-300" onerror="this.src=''; this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-[10px] text-indigo-400 font-mono p-2 text-center\'>History UI</div>'">
+          </div>
+          <span class="text-[10px] sm:text-[11px] font-bold text-white block text-center">05. Audit History</span>
+          <span class="text-[9px] sm:text-[10px] text-slate-400 text-center leading-tight">Server-side audit records</span>
+        </div>
+      </div>
+
+      <!-- Highlights banner -->
+      <div class="glass-card p-2.5 sm:p-3 border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-slate-300 gap-1.5">
+        <span class="flex items-center gap-2">
+          <i class="fa-solid fa-mobile-screen text-emerald-400 shrink-0"></i>
+          <span><strong>Installable Android Build:</strong> <code class="text-emerald-300 font-mono text-[10px] sm:text-[11px]">frontend/build/app/outputs/flutter-apk/app-debug.apk</code> ready for emulator and phone testing.</span>
+        </span>
+        <span class="text-slate-500 font-mono shrink-0">Reduced-motion support (150ms splash)</span>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>CodeAlpha Task 4: Disease Prediction from Medical Data</span>
+      <span class="font-mono">Slide 11 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SLIDE 12: VERIFICATION & INTERNSHIP CONCLUSION -->
+  <!-- ============================================================== -->
+  <section class="slide justify-between" id="slide-12">
+    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 sm:pb-4">
+      <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono">11 // Deliverables & Outcomes</span>
+      <span class="text-[11px] text-slate-400 font-mono hidden sm:inline">CodeAlpha Task 4 Completion</span>
+    </div>
+
+    <div class="my-auto py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-5xl">
+      <div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">Verification Suite & CodeAlpha Requirements</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+          Every requirement stated in the CodeAlpha Machine Learning syllabus has been completed, tested, and empirically verified.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+        <!-- Verification checklist -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 sm:space-y-3">
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-check text-emerald-400"></i> CodeAlpha Task 4 Coverage Matrix
+          </h3>
+          <ul class="text-[11px] sm:text-xs space-y-2 text-slate-300 font-mono">
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i>
+              <span><strong>Disease Prediction:</strong> Accurate probability risk prediction across 3 medical domains.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i>
+              <span><strong>Structured Datasets:</strong> Wisconsin Breast Cancer, Cleveland Heart Disease, Sylhet Diabetes.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i>
+              <span><strong>Multi-Modal Features:</strong> Cytological nuclear geometry, hemodynamics, blood test flags & symptoms.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 shrink-0"></i>
+              <span><strong>All 4 Required Classifiers:</strong> SVM, Logistic Regression, Random Forest, and XGBoost all trained.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Testing evidence -->
+        <div class="glass-card p-4 sm:p-5 border-slate-800 space-y-2 sm:space-y-3">
+          <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-vial-virus text-teal-400"></i> Automated Test Suite Verification
+          </h3>
+          <ul class="text-[11px] sm:text-xs space-y-2 text-slate-300 font-mono">
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-teal-400 mt-0.5 shrink-0"></i>
+              <span><strong>Python Pytest Suite:</strong> 13/13 passed (real inference, XGBoost, schema integrity, rejection).</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-teal-400 mt-0.5 shrink-0"></i>
+              <span><strong>Flutter Test Suite:</strong> 19/19 passed (Riverpod ViewModel, model selection, splash timing).</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-teal-400 mt-0.5 shrink-0"></i>
+              <span><strong>Smoke Integration Test:</strong> 60 automated end-to-end predictions across all diseases & models.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <i class="fa-solid fa-circle-check text-teal-400 mt-0.5 shrink-0"></i>
+              <span><strong>Static Analysis:</strong> Zero issues on Flutter analyze and Go vet; Go binary built successfully.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Presenter Card & Submission Info -->
+      <div class="glass-card p-4 sm:p-5 border-emerald-500/40 glow-emerald text-center space-y-2">
+        <h3 class="text-lg sm:text-xl font-extrabold text-white">Thank You & Open for Technical Discussion</h3>
+        <p class="text-xs sm:text-sm font-semibold text-emerald-300">
+          Presented by: <span class="text-white font-bold">Santosh Saha</span> &bull; CodeAlpha Machine Learning Intern
+        </p>
+        <p class="text-[10px] sm:text-xs text-slate-400">
+          Project Repository: <code class="text-emerald-400 font-mono">CodeAlpha_Disease_Prediction_From_Medical_Data</code> &bull; Task 4
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-2 pt-1 text-[10px] sm:text-xs text-slate-300 font-mono">
+          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Flutter Android</span>
+          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Go Gin Gateway :8080</span>
+          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">FastAPI ML :8000</span>
+          <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">12 Scikit-Learn / XGBoost Models</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/80 pt-3">
+      <span>Santosh Saha &bull; CodeAlpha Machine Learning Internship Cohort</span>
+      <span class="font-mono">Slide 12 of 12</span>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- INTERACTIVE NAVIGATION SCRIPT WITH TOUCH SWIPE GESTURES -->
+  <!-- ============================================================== -->
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 12;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      
+      const slides = document.querySelectorAll('.slide');
+      slides.forEach((slide, i) => {
+        slide.classList.remove('active');
+        if (i === index - 1) {
+          slide.classList.add('active');
+          // Reset scroll position to top when navigating to a new slide
+          slide.scrollTop = 0;
+        }
+      });
+
+      window.scrollTo(0, 0);
+
+      currentSlide = index;
+      document.getElementById('slideCounter').innerText = currentSlide;
+      document.getElementById('slideSelect').value = currentSlide;
+      document.getElementById('progressBar').style.width = ((currentSlide / totalSlides) * 100) + '%';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn("Fullscreen request error:", err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Keyboard navigation: Left/Right, Space, Home/End, PageUp/PageDown, F
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger if user is interacting with an input/select
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        showSlide(1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        showSlide(totalSlides);
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullScreen();
+      }
+    });
+
+    // Mobile & Tablet Touch Swipe Support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+      
+      // Horizontal swipe threshold: > 45px and more horizontal than vertical
+      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+        if (diffX < 0) {
+          nextSlide(); // Swiped left -> next slide
+        } else {
+          prevSlide(); // Swiped right -> previous slide
+        }
+      }
+    }
+  </script>
+</body>
+</html>

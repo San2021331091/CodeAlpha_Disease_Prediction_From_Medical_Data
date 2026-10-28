@@ -1,0 +1,23 @@
+services:
+  ml:
+    build: ./ml-service
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  gateway:
+    build: ./backend-gateway
+    environment:
+      ML_SERVICE_URL: http://ml:8000
+      GATEWAY_ADDR: 0.0.0.0:8080
+      HISTORY_PATH: /app/data/history.json
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-8080}:8080"
+    volumes:
+      - history:/app/data
+    depends_on:
+      ml:
+        condition: service_healthy
+volumes:
+  history:
