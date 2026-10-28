@@ -14,7 +14,6 @@ A **modern machine‑learning pipeline** that predicts disease risk from heterog
 - [Running the Services](#running-the-services)
 - [API Usage](#api-usage)
 - [Screenshots](#screenshots)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
